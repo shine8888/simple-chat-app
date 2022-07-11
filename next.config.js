@@ -2,7 +2,7 @@ const { truncate } = require('fs/promises');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: truncate,
+  reactStrictMode: true,
   swcMinify: true,
   compiler: {
     styledComponents: true,
