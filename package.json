@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "cypress:open": "cypress open"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/react": "^11.9.3",
@@ -28,7 +27,6 @@
     "@types/react": "18.0.15",
     "@types/react-dom": "18.0.6",
     "@types/styled-components": "^5.1.25",
-    "cypress": "^10.3.0",
     "cypress-firebase": "^2.2.2",
     "eslint": "8.19.0",
     "eslint-config-next": "12.2.2",
