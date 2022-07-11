@@ -1,5 +1,4 @@
 import IconButton from '@mui/material/IconButton';
-import styled from 'styled-components';
 import { useRecipient } from '../hooks/useRecipient';
 import { Conversation, AppMessage } from '../types';
 import {
@@ -8,21 +7,14 @@ import {
   transformMessage,
 } from '../utils/getMessagesFromConversation';
 import RecipientAvatar from './RecipientAvatar';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useRouter } from 'next/router';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '../firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import InsertEmoticonIcon from '@mui/icons-material/InsertEmoticon';
 import SendIcon from '@mui/icons-material/Send';
 import MicIcon from '@mui/icons-material/Mic';
-import {
-  KeyboardEventHandler,
-  MouseEventHandler,
-  useRef,
-  useState,
-} from 'react';
+import ClearIcon from '@mui/icons-material/Clear';
+import { KeyboardEventHandler, useRef, useState } from 'react';
 import {
   addDoc,
   collection,
@@ -48,6 +40,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogContent from '@mui/material/DialogContent';
 import Button from '@mui/material/Button';
 import DialogActions from '@mui/material/DialogActions';
+import Tooltip from '@mui/material/Tooltip';
+import EmojisContainer from './Emojis';
 
 const ConversationScreen = ({
   conversation,
@@ -56,22 +50,33 @@ const ConversationScreen = ({
   conversation: Conversation;
   messages: AppMessage[];
 }) => {
+  //Use State
   const [newMessage, setNewMessage] = useState('');
   const [isOpenDialog, setOpenDialog] = useState(false);
+  const [emoji, setEmoji] = useState(null);
+  const [isShowPickingEmoji, setShowPickingEmoji] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+
+  // useAuthState to get loggedUser
   const [loggedInUser, _loading, _error] = useAuthState(auth);
   const conversationUsers = conversation.users;
 
+  // Hooks useRecipient to get recipient and recipientEmail
   const { recipientEmail, recipient } = useRecipient(conversationUsers);
 
+  // Use Router to get conversationId
   const router = useRouter();
-
   const conversationId = router.query.id as string;
 
+  // Generate query message and get all the message
   const queryMessage = generateQueryMessage(conversationId);
   const [messagesSnap, messagesLoading, __error] = useCollection(queryMessage);
 
+  // USAGE FUNCTIONS
+  // Insert message to firebase
   const addMessageToFireBase = async () => {
     try {
+      // Update last seen to user
       await setDoc(
         doc(db, 'users', loggedInUser?.uid as string),
         {
@@ -79,6 +84,7 @@ const ConversationScreen = ({
         },
         { merge: true } // Update only lastseen field
       );
+      // Add message to messages collection
       await addDoc(collection(db, 'messages'), {
         conversation_id: conversationId,
         sent_at: serverTimestamp(),
@@ -94,22 +100,22 @@ const ConversationScreen = ({
     }
   };
 
+  // Functions send message with enter and click
   const sendMessageWhenEnter: KeyboardEventHandler<HTMLInputElement> = (
     event
   ) => {
     if (event.key === 'Enter') {
-      event.preventDefault();
-      if (!newMessage) return;
-      addMessageToFireBase();
+      sendNewMessageByClick(event);
     }
   };
 
-  const sendNewMessageByClick: MouseEventHandler<SVGSVGElement> = (event) => {
+  const sendNewMessageByClick = (event: any) => {
     event.preventDefault();
     if (!newMessage) return;
     addMessageToFireBase();
   };
 
+  // Function load messages
   const showMessages = () => {
     // When front-end loading messages, display the messages that passing from SSR
     if (messagesLoading) {
@@ -123,15 +129,25 @@ const ConversationScreen = ({
     }
   };
 
-  const endOfListMessage = useRef<HTMLDivElement>(null);
+  // Function delete conversation
+  const onDeleteConversation = async () => {
+    await deleteDoc(doc(db, 'conversations', conversationId as string));
+    router.replace('/');
+  };
 
+  const endOfListMessage = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
+
+  // Scroll message to bottom
   const scrollToBottom = () => {
     endOfListMessage.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const onDeleteConversation = async () => {
-    await deleteDoc(doc(db, 'conversations', conversationId as string));
-    router.replace('/');
+  // TODO
+  const onEmojiClick = (e: any, emojiObject: any) => {
+    // const { emoji } = emojiObject;
+    setEmoji(emojiObject);
+    setNewMessage(newMessage + emojiObject);
   };
 
   return (
@@ -151,10 +167,9 @@ const ConversationScreen = ({
         </StyledHeaderInfor>
         <StyledHeaderIcon>
           <IconButton>
-            <AttachFileIcon />
-          </IconButton>
-          <IconButton>
-            <MoreVertIcon onClick={() => setOpenDialog(true)} />
+            <Tooltip title="Delete conversation">
+              <ClearIcon onClick={() => setOpenDialog(true)} />
+            </Tooltip>
           </IconButton>
         </StyledHeaderIcon>
       </StyledRecipientHeader>
@@ -164,7 +179,6 @@ const ConversationScreen = ({
         <StyledAutoScrollComponent ref={endOfListMessage} />
       </StyledMessageContainer>
       <StyledInputContainer>
-        <InsertEmoticonIcon />
         <StyledInput
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
@@ -176,9 +190,6 @@ const ConversationScreen = ({
         <IconButton>
           <MicIcon />
         </IconButton>
-        <div>
-          <input type="file" name="file" />
-        </div>
       </StyledInputContainer>
 
       <Dialog open={isOpenDialog} onClose={() => setOpenDialog(false)}>

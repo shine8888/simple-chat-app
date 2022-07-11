@@ -6,6 +6,10 @@ import styled from 'styled-components';
 import ConversationScreen from '../../components/ConversationScreen';
 import SideBar from '../../components/SideBar';
 import { auth, db } from '../../firebase';
+import {
+  StyledConversation,
+  StyledConversationWrapper,
+} from '../../styled-components/StyledConversation';
 import { AppMessage, Conversation } from '../../types';
 import {
   generateQueryMessage,
@@ -17,27 +21,11 @@ interface Props {
   conversation: Conversation;
   messages: AppMessage[];
 }
-const StyledWrapper = styled.div`
-  display: flex;
-`;
-
-const StyledConversation = styled.div`
-  flex-grow: 1;
-  overflow: scroll;
-  height: 100vh;
-
-  ::-webkit-scrollbar {
-    display: none;
-  }
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-`;
 
 const Conversation = ({ conversation, messages }: Props) => {
   const [loggedInUser, _loading, _error] = useAuthState(auth);
   return (
-    <StyledWrapper>
+    <StyledConversationWrapper>
       <Head>
         <title>
           Conversation with{' '}
@@ -48,7 +36,7 @@ const Conversation = ({ conversation, messages }: Props) => {
       <StyledConversation>
         <ConversationScreen conversation={conversation} messages={messages} />
       </StyledConversation>
-    </StyledWrapper>
+    </StyledConversationWrapper>
   );
 };
 

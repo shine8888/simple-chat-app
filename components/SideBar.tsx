@@ -27,16 +27,17 @@ import {
   StyledHeader,
   StyledSearch,
   StyledSearchInput,
-  StyledSideBarButton,
   StyledWrapper,
 } from '../styled-components/StyledSideBar';
 
 const SideBar = () => {
+  //USESTATE
   const [loggedInUser, _loading, _error] = useAuthState(auth);
   const [isOpenDialog, setOpenDialog] = useState(false);
   const [recipientAddress, setRecipientAddress] = useState('');
   const [findingEmailAddress, setFindingEmailAddress] = useState('');
 
+  // Prepare query for get all conversations of logged user
   const getAllConversationEmailsQuery = query(
     collection(db, 'conversations'),
     where('users', 'array-contains', loggedInUser?.email)
@@ -45,27 +46,34 @@ const SideBar = () => {
     getAllConversationEmailsQuery
   );
 
+  // Get all conversation and set it to useState
   const allConversations = conversationSnapshot?.docs;
   const [listConversations, setListConversations] = useState(allConversations);
 
+  // USEEFFECT
+  // Checking when conversationSnapshot is fully loaded, will set the newest conversationSnapshot to listConversations
   useEffect(() => {
     setListConversations(conversationSnapshot?.docs);
   }, [conversationSnapshot]);
 
+  // Checking when findingEmailAddress is empty, reset the listConversations
   useEffect(() => {
     if (!findingEmailAddress) setListConversations(allConversations);
   }, [findingEmailAddress]);
 
+  // Close dialog function
   const onCloseDialog = (status: boolean) => {
     setOpenDialog(status);
     if (!status) setRecipientAddress('');
   };
 
+  // Checking the recipient addess is existed or not
   const checkExistedConversation = (recipientAddress: string) =>
     conversationSnapshot?.docs.find((conversation) =>
       (conversation.data() as Conversation).users.includes(recipientAddress)
     );
 
+  // Create new conversation function
   const onCreateConversation = async () => {
     if (!recipientAddress) return;
     if (
@@ -82,6 +90,7 @@ const SideBar = () => {
     onCloseDialog(false);
   };
 
+  // Logout function
   const onLogout = async () => {
     try {
       await signOut(auth);
@@ -90,6 +99,7 @@ const SideBar = () => {
     }
   };
 
+  // Searching conversation function
   const onSearchConversation = () => {
     if (findingEmailAddress) {
       const filteredEmailAddress = allConversations?.filter((c) =>
@@ -98,6 +108,7 @@ const SideBar = () => {
       setListConversations(filteredEmailAddress);
     }
   };
+
   return (
     <StyledWrapper>
       <StyledHeader>
@@ -129,7 +140,6 @@ const SideBar = () => {
       </StyledSearch>
 
       {listConversations?.map((doc) => {
-        console.log(doc, ':: check docs');
         return (
           <ConversationSelect
             key={doc.id}

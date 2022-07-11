@@ -9,6 +9,7 @@ import {
 
 const Message = ({ message }: { message: AppMessage }) => {
   const [loggedInUser, _loading, _error] = useAuthState(auth);
+  // Checking message type for logged user
   const MessageType =
     loggedInUser?.email === message.user ? StyledSender : StyledReceiver;
 

@@ -11,9 +11,12 @@ const ConversationSelect = ({
   id: string;
   conversationUsers: Conversation['users'];
 }) => {
+  // Use router
   const router = useRouter();
+  // Hooks useRecipient
   const { recipient, recipientEmail } = useRecipient(conversationUsers);
 
+  // Function to change the route to exact conversation
   const onSelectConversation = () => {
     router.push(`/conversations/${id}`);
   };
