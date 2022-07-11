@@ -8,9 +8,6 @@ const cypressConfig = defineConfig({
     supportFile: 'cypress/support/e2e/index.js',
     setupNodeEvents(on, config) {
       cypressFirebasePlugin(on, config, admin);
-      
     },
   },
 });
-
-export {};
